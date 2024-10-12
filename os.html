@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Export HTML Form Data To Excel Sheet</title>
+    <script src="https://unpkg.com/xlsx@0.15.1/dist/xlsx.full.min.js"></script>
+  </head>
+  <body>
+    <form id="dataForm">
+      <label>UserFullName</label>
+      <input type="text" id="fullname" value="" />
+      <br />
+      <label>UserGender</label>
+      <input type="text" id="gender" value="" />
+      <br />
+      <label>Username</label>
+      <input type="text" id="name" value="" />
+      <br />
+      <label>Password</label>
+      <input type="password" id="pass" value="" />
+      <br />
+      <button type="button" onclick="addData()">Add Data</button>
+      <button type="button" onclick="removeData()">Remove Data</button>
+      <button type="button" onclick="requestPassword()">
+        Export Data To Excel
+      </button>
+    </form>
+
+    <table id="tbl" border="1" style="display: none">
+      <thead>
+        <tr>
+          <th>UserFullName</th>
+          <th>UserGender</th>
+          <th>Username</th>
+          <th>Password</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody">
+        <!-- Rows will be added here -->
+      </tbody>
+    </table>
+
+    <script type="module">
+      // استيراد الدوال اللازمة من SDKs التي تحتاجها
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js";
+      import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-analytics.js";
+      import {
+        getDatabase,
+        ref,
+        set,
+        push,
+      } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-database.js";
+
+      // إعدادات Firebase الخاصة بتطبيقك
+      const firebaseConfig = {
+        apiKey: "AIzaSyBFfb316-Hcg2ryUacQBF257Yka-r7RS4w",
+        authDomain: "fdsfsdfdfqqqqqq.firebaseapp.com",
+        projectId: "fdsfsdfdfqqqqqq",
+        storageBucket: "fdsfsdfdfqqqqqq.appspot.com",
+        messagingSenderId: "903095527023",
+        appId: "1:903095527023:web:b148798e907dd142adcf9a",
+        measurementId: "G-6YD8NT3FN4",
+      };
+
+      // تهيئة Firebase
+      const app = initializeApp(firebaseConfig);
+      const analytics = getAnalytics(app);
+      const database = getDatabase(app); // إعداد قاعدة البيانات
+
+      window.addData = function () {
+        const fullname = document.getElementById("fullname").value;
+        const gender = document.getElementById("gender").value;
+        const name = document.getElementById("name").value;
+        const pass = document.getElementById("pass").value;
+
+        if (fullname && gender && name && pass) {
+          // إضافة البيانات إلى Firebase
+          const userRef = push(ref(database, "users")); // استخدام push لإنشاء معرف فريد
+          set(userRef, {
+            fullname: fullname,
+            gender: gender,
+            name: name,
+            pass: pass,
+          });
+
+          // إضافة البيانات إلى الجدول
+          const tableBody = document.getElementById("tableBody");
+          const newRow = tableBody.insertRow();
+
+          newRow.insertCell(0).innerText = fullname;
+          newRow.insertCell(1).innerText = gender;
+          newRow.insertCell(2).innerText = name;
+          newRow.insertCell(3).innerText = pass;
+
+          document.getElementById("dataForm").reset(); // إعادة تعيين المدخلات
+          alert("Data added successfully!"); // تنبيه عند الإضافة الناجحة
+        } else {
+          alert("Please fill in all fields.");
+        }
+      };
+
+      window.removeData = function () {
+        const tableBody = document.getElementById("tableBody");
+        while (tableBody.rows.length > 0) {
+          tableBody.deleteRow(0);
+        }
+        alert("All data removed successfully!"); // تنبيه عند الإزالة الناجحة
+      };
+
+      window.requestPassword = function () {
+        const correctPassword = "عمي راجل"; // كلمة المرور الصحيحة
+        let password = prompt("أدخل كلمة المرور: عمي راجل");
+
+        while (password !== correctPassword) {
+          alert("كلمة المرور غير صحيحة. حاول مرة أخرى.");
+          password = prompt("أدخل كلمة المرور:");
+        }
+
+        // إذا كانت الكلمة صحيحة، قم بتصدير البيانات إلى Excel
+        ExportToExcel("xlsx");
+      };
+
+      window.ExportToExcel = function (type, fn, dl) {
+        const elt = document.getElementById("tbl");
+        const wb = XLSX.utils.table_to_book(elt, { sheet: "sheet1" });
+        return dl
+          ? XLSX.write(wb, { bookType: type, bookSST: true, type: "base64" })
+          : XLSX.writeFile(wb, fn || "DataSheet." + (type || "xlsx"));
+      };
+    </script>
+  </body>
+</html>
